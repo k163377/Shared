@@ -2,7 +2,9 @@ package com.mapk.core
 
 import com.mapk.annotations.KParameterFlatten
 import com.mapk.core.internal.BucketGenerator
+import com.mapk.core.internal.ParameterNameConverter
 import com.mapk.core.internal.ValueParameterGenerator
+import com.mapk.core.internal.getAliasOrName
 import com.mapk.core.internal.getKConstructor
 import com.mapk.core.internal.isUseDefaultArgument
 import kotlin.reflect.KFunction
@@ -10,14 +12,14 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.isAccessible
 
-class KFunctionAdaptorGenerator<T>(
+class KFunctionAdaptorGenerator<T> internal constructor(
     private val function: KFunction<T>,
-    // TODO: parameterNameConverter: ParameterNameConverter
+    parameterNameConverter: ParameterNameConverter,
     instance: Any? = null,
     private val index: Int?
 ) {
     private val parameters: List<KParameter> = function.parameters
-    private val valueParameterGenerators: List<ValueParameterGenerator>
+    private val valueParameterGenerators: List<ValueParameterGenerator<*>>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
     private val bucketGenerator: BucketGenerator = BucketGenerator(parameters, instance)
 
@@ -28,17 +30,33 @@ class KFunctionAdaptorGenerator<T>(
         // この関数には確実にアクセスするためアクセシビリティ書き換え
         function.isAccessible = true
 
-        val tempValueParameters = ArrayList<ValueParameterGenerator>()
+        val tempValueParameters = ArrayList<ValueParameterGenerator<*>>()
         val tempChildGenerators = ArrayList<KFunctionAdaptorGenerator<*>>()
 
         parameters.forEach { param ->
+            val requiredClazz = param.getKClass()
+            val name = param.getAliasOrName()!!
+
             if (param.kind == KParameter.Kind.VALUE && !param.isUseDefaultArgument()) {
                 param.findAnnotation<KParameterFlatten>()
                     ?.let {
+                        // 名前の変換処理
+                        val converter: ParameterNameConverter = if (it.fieldNameToPrefix) {
+                            // 結合が必要な場合は結合機能のインスタンスを持ってきて対応する
+                            parameterNameConverter.nest(name, it.nameJoiner.objectInstance!!)
+                        } else {
+                            // プレフィックスを要求しない場合は全てsimpleでマップするように修正
+                            parameterNameConverter.toSimple()
+                        }
+
                         val (tempInstance, tempConstructor) = param.getKClass().getKConstructor()
-                        tempChildGenerators.add(KFunctionAdaptorGenerator(tempConstructor, tempInstance, param.index))
+                        tempChildGenerators.add(KFunctionAdaptorGenerator(
+                            tempConstructor, converter, tempInstance, param.index
+                        ))
                     }
-                    ?: tempValueParameters.add(ValueParameterGenerator(param))
+                    ?: tempValueParameters.add(
+                        ValueParameterGenerator(param, parameterNameConverter.convert(name), requiredClazz)
+                    )
             }
         }
 
