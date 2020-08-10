@@ -7,6 +7,7 @@ import com.mapk.core.internal.ValueParameterGenerator
 import com.mapk.core.internal.getAliasOrName
 import com.mapk.core.internal.getKConstructor
 import com.mapk.core.internal.isUseDefaultArgument
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
@@ -81,4 +82,10 @@ class KFunctionAdaptorGenerator<T> internal constructor(
             childGenerators.map { it.generateAdaptor() }
         )
     }
+}
+
+fun <T : Any> KClass<T>.toKFunctionAdaptorGenerator(
+    parameterNameConverter: ((String) -> String)?
+): KFunctionAdaptorGenerator<T> = this.getKConstructor().let { (instance, function) ->
+    KFunctionAdaptorGenerator(function, parameterNameConverter, instance)
 }
