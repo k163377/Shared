@@ -26,14 +26,18 @@ internal class ArgumentBucket(
             } else null
         }.toSet()
     override val keys: Set<KParameter>
-        get() = keyList.filterIndexed { index, _ -> initializationStatuses[index] }.toSet()
+        get() = keyList.filterIsInitialized().toSet()
     override val size: Int
         get() = initializationStatuses.count { it }
     override val values: Collection<Any?>
-        get() = values.filterIndexed { index, _ -> initializationStatuses[index] }
+        get() = values.filterIsInitialized()
 
     override fun containsKey(key: KParameter): Boolean = initializationStatuses[key.index]
     override fun containsValue(value: Any?): Boolean = valueArray.any { it == value }
     override fun get(key: KParameter): Any? = valueArray[key.index]
     override fun isEmpty(): Boolean = size != 0
+
+    // 初期化されているインデックスの内容だけ取り出す共通関数
+    private fun<T> Collection<T>.filterIsInitialized() =
+        filterIndexed { index, _ -> initializationStatuses[index] }
 }
