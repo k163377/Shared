@@ -41,7 +41,12 @@ class KFunctionAdaptor<T> internal constructor(
         }
     }
 
-    // TODO: forcePut関数を作る
+    fun forcePut(key: String, value: Any?) {
+        requiredParameterMap.getValue(key).let { (param, bucket) ->
+            bucket.forcePut(param.index, value)
+            count++
+        }
+    }
 
     fun call(): T {
         children.forEach {
