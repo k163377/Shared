@@ -2,7 +2,6 @@ package com.mapk.core.internal
 
 import com.mapk.annotations.KParameterRequireNonNull
 import com.mapk.core.ValueParameter
-import com.mapk.core.getKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 
