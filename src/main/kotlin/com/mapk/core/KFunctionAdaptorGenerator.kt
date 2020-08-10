@@ -46,10 +46,10 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         val tempChildGenerators = ArrayList<KFunctionAdaptorGenerator<*>>()
 
         parameters.forEach { param ->
-            val requiredClazz = param.getKClass()
-            val name = param.getAliasOrName()!!
-
             if (param.kind == KParameter.Kind.VALUE && !param.isUseDefaultArgument()) {
+                val requiredClazz = param.getKClass()
+                val name = param.getAliasOrName()!!
+
                 param.findAnnotation<KParameterFlatten>()
                     ?.let {
                         // 名前の変換処理
