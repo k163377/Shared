@@ -37,7 +37,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         if (parameters.isEmpty() || (instance != null && parameters.size == 1))
             throw IllegalArgumentException("This function is not require arguments.")
 
-        bucketGenerator = BucketGenerator(function.parameters, instance)
+        bucketGenerator = BucketGenerator(parameters, instance)
 
         // この関数には確実にアクセスするためアクセシビリティ書き換え
         function.isAccessible = true
