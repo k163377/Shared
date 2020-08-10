@@ -1,23 +1,22 @@
 package com.mapk.core
 
 import com.mapk.core.internal.ArgumentBucket
+import com.mapk.core.internal.ValueParameterGenerator
 import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
 
 class KFunctionAdaptor<T> internal constructor(
     private val function: KFunction<T>,
     private val index: Int?,
-    valueParameters: List<KParameter>, // name, index, annotations, ...
+    valueParameters: List<ValueParameterGenerator>,
     private val bucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
 ) {
-    class AdaptorEntry internal constructor(val parameter: KParameter, internal val bucket: ArgumentBucket)
-
-    val requiredParameterMap: Map<String, AdaptorEntry>
+    val requiredParameterMap: Map<String, ValueParameter<*>>
 
     init {
         val thisMap = valueParameters.associate {
-            it.name!! to AdaptorEntry(it, bucket)
+            val valueParameter = it.generate(bucket)
+            valueParameter.name to valueParameter
         }
 
         requiredParameterMap = children
