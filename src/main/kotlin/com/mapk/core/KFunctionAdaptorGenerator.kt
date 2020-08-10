@@ -18,6 +18,14 @@ class KFunctionAdaptorGenerator<T> internal constructor(
     instance: Any? = null,
     private val index: Int?
 ) {
+    // 外部からの呼び出し用、外から呼ばれる = ルートなのでindexは無い
+    constructor(function: KFunction<T>, parameterNameConverter: ((String) -> String)?, instance: Any?) : this(
+        function,
+        ParameterNameConverter.Simple(parameterNameConverter),
+        instance,
+        null
+    )
+
     private val parameters: List<KParameter> = function.parameters
     private val valueParameterGenerators: List<ValueParameterGenerator<*>>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
