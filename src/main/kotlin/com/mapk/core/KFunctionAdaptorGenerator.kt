@@ -20,7 +20,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
     private val index: Int?
 ) {
     // 外部からの呼び出し用、外から呼ばれる = ルートなのでindexは無い
-    constructor(function: KFunction<T>, parameterNameConverter: ((String) -> String)?, instance: Any?) : this(
+    constructor(function: KFunction<T>, parameterNameConverter: ((String) -> String)?, instance: Any? = null) : this(
         function,
         ParameterNameConverter.Simple(parameterNameConverter),
         instance,
