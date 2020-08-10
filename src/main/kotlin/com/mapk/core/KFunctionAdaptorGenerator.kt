@@ -84,7 +84,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         return KFunctionAdaptor(
             function,
             index,
-            requiredParameters,
+            myParameters,
             bucketGenerator.generate(),
             childGenerators.map { it.generateAdaptor() }
         )
