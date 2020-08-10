@@ -11,6 +11,7 @@ class KFunctionAdaptor<T> internal constructor(
     private val bucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
 ) {
+    // TODO: ユーザーの生成処理はforEachで回すことになりそうなので、公開するものは多分Listの方がよい
     val requiredParameterMap: Map<String, ValueParameter<*>>
 
     init {
