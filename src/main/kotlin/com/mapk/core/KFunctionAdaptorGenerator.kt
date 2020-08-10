@@ -2,6 +2,7 @@ package com.mapk.core
 
 import com.mapk.annotations.KParameterFlatten
 import com.mapk.core.internal.BucketGenerator
+import com.mapk.core.internal.ValueParameterGenerator
 import com.mapk.core.internal.getKConstructor
 import com.mapk.core.internal.isUseDefaultArgument
 import kotlin.reflect.KFunction
@@ -15,7 +16,7 @@ class KFunctionAdaptorGenerator<T>(
     private val index: Int?
 ) {
     private val parameters: List<KParameter> = function.parameters
-    private val valueParameters: List<KParameter>
+    private val valueParameterGenerators: List<ValueParameterGenerator>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
     private val bucketGenerator: BucketGenerator = BucketGenerator(parameters, instance)
 
@@ -26,19 +27,22 @@ class KFunctionAdaptorGenerator<T>(
         // この関数には確実にアクセスするためアクセシビリティ書き換え
         function.isAccessible = true
 
-        val tempValueParameters = ArrayList<KParameter>()
+        val tempValueParameters = ArrayList<ValueParameterGenerator>()
         val tempChildGenerators = ArrayList<KFunctionAdaptorGenerator<*>>()
 
         parameters.forEach { param ->
             if (param.kind == KParameter.Kind.VALUE && !param.isUseDefaultArgument()) {
-                param.annotations.filterIsInstance<KParameterFlatten>().singleOrNull()?.let {
-                    val (tempInstance, tempConstructor) = param.getKClass().getKConstructor()
-                    tempChildGenerators.add(KFunctionAdaptorGenerator(tempConstructor, tempInstance, param.index))
-                } ?: tempValueParameters.add(param)
+                param.annotations.filterIsInstance<KParameterFlatten>()
+                    .singleOrNull()
+                    ?.let {
+                        val (tempInstance, tempConstructor) = param.getKClass().getKConstructor()
+                        tempChildGenerators.add(KFunctionAdaptorGenerator(tempConstructor, tempInstance, param.index))
+                    }
+                    ?: tempValueParameters.add(ValueParameterGenerator(param))
             }
         }
 
-        valueParameters = tempValueParameters
+        valueParameterGenerators = tempValueParameters
         childGenerators = tempChildGenerators
     }
 
@@ -46,7 +50,7 @@ class KFunctionAdaptorGenerator<T>(
         return KFunctionAdaptor(
             function,
             index,
-            valueParameters,
+            valueParameterGenerators,
             bucketGenerator.generate(),
             childGenerators.map { it.generateAdaptor() }
         )
