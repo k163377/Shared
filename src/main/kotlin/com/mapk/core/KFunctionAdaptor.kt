@@ -1,57 +1,53 @@
 package com.mapk.core
 
+import com.mapk.core.internal.ArgumentBucket
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 
-class KFunctionAdaptor<T>(
+class KFunctionAdaptor<T> internal constructor(
     private val function: KFunction<T>,
     private val index: Int?,
-    private val valueParameters: List<KParameter>, // name, index, annotations, ...
-    private val bucket: Array<Any?>,
+    valueParameters: List<KParameter>, // name, index, annotations, ...
+    private val bucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
 ) {
-    val requiredParameterMap: Map<String, Pair<KParameter, Array<Any?>>>
+    class AdaptorEntry internal constructor(val parameter: KParameter, internal val bucket: ArgumentBucket)
+
+    val requiredParameterMap: Map<String, AdaptorEntry>
 
     init {
         val thisMap = valueParameters.associate {
-            it.name!! to (it to bucket)
+            it.name!! to AdaptorEntry(it, bucket)
         }
 
         requiredParameterMap = thisMap + children.map { it.requiredParameterMap }.reduce { acc, cur -> acc + cur }
     }
 
-    fun isFullInitialized(): Boolean = TODO("ArgumentBucketちゃんと作ったら")
+    val isFullInitialized: Boolean get() = bucket.isFullInitialized
 
-    fun isInitialized(key: String): Boolean = TODO("もしかするとput対象返した方が効率的？")
-
+    // TODO: forcePutとか考えると、初期化状況の管理はAdaptorに持たせるのが妥当という気がするので考える
     fun putIfAbsent(key: String, value: Any?) {
-        if (isInitialized(key)) return
-
-        requiredParameterMap.getValue(key).let { (param, bucket) ->
-            bucket[param.index] = value
+        requiredParameterMap.getValue(key).let {
+            // TODO: bucketのインターフェースを実情に合わせて検討する
+            if (!it.bucket.containsKey(it.parameter)) it.bucket.putIfAbsent(it.parameter.index, value)
         }
     }
 
     fun putIfAbsent(key: String, consumer: () -> Any?) {
-        if (isInitialized(key)) return
-
-        requiredParameterMap.getValue(key).let { (param, bucket) ->
-            bucket[param.index] = consumer()
-        }
-    }
-
-    fun forcePut(key: String, value: Any?) {
-        requiredParameterMap.getValue(key).let { (param, bucket) ->
-            bucket[param.index] = value
+        requiredParameterMap.getValue(key).let {
+            if (!it.bucket.containsKey(it.parameter)) it.bucket.putIfAbsent(it.parameter.index, consumer())
         }
     }
 
     fun call(): T {
         children.forEach {
             // 子ならindexは入ってる想定
-            bucket[it.index!!] = it.call()
+            bucket.putIfAbsent(it.index!!, it.call())
         }
-        // TODO: Bucket呼び出し
-        return function.call(*bucket)
+
+        return if (bucket.isFullInitialized)
+            function.call(*bucket.valueArray)
+        else
+            function.call(bucket)
     }
 }
