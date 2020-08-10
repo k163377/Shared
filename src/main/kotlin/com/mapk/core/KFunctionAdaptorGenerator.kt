@@ -7,6 +7,7 @@ import com.mapk.core.internal.getKConstructor
 import com.mapk.core.internal.isUseDefaultArgument
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.isAccessible
 
 class KFunctionAdaptorGenerator<T>(
@@ -32,8 +33,7 @@ class KFunctionAdaptorGenerator<T>(
 
         parameters.forEach { param ->
             if (param.kind == KParameter.Kind.VALUE && !param.isUseDefaultArgument()) {
-                param.annotations.filterIsInstance<KParameterFlatten>()
-                    .singleOrNull()
+                param.findAnnotation<KParameterFlatten>()
                     ?.let {
                         val (tempInstance, tempConstructor) = param.getKClass().getKConstructor()
                         tempChildGenerators.add(KFunctionAdaptorGenerator(tempConstructor, tempInstance, param.index))
