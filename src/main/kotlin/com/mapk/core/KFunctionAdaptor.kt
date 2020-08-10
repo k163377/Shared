@@ -21,8 +21,7 @@ class KFunctionAdaptor<T> internal constructor(
             .fold(thisMap) { acc, cur -> acc + cur }
     }
 
-    // TODO: ここでいう初期化状態は子まで全て含んだものになるため修正する
-    val isFullInitialized: Boolean get() = myBucket.valueArray.size == count
+    val isFullInitialized: Boolean get() = myBucket.valueArray.size == count && children.all { it.isFullInitialized }
 
     fun putIfAbsent(key: String, value: Any?) {
         requiredParameterMap.getValue(key).let { (param, bucket) ->
