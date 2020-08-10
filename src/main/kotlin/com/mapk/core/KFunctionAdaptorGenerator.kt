@@ -3,7 +3,6 @@ package com.mapk.core
 import com.mapk.annotations.KParameterFlatten
 import com.mapk.core.internal.BucketGenerator
 import com.mapk.core.internal.ParameterNameConverter
-import com.mapk.core.internal.ValueParameterGenerator
 import com.mapk.core.internal.getAliasOrName
 import com.mapk.core.internal.getKConstructor
 import com.mapk.core.internal.isUseDefaultArgument
@@ -27,19 +26,23 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         null
     )
 
-    private val parameters: List<KParameter> = function.parameters
-    private val valueParameterGenerators: List<ValueParameterGenerator<*>>
+    val requiredParameters: List<ValueParameter<*>>
+    private val myParameters: List<ValueParameter<*>>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
-    private val bucketGenerator: BucketGenerator = BucketGenerator(parameters, instance)
+    private val bucketGenerator: BucketGenerator
 
     init {
+        val parameters = function.parameters
+
         if (parameters.isEmpty() || (instance != null && parameters.size == 1))
             throw IllegalArgumentException("This function is not require arguments.")
+
+        bucketGenerator = BucketGenerator(function.parameters, instance)
 
         // この関数には確実にアクセスするためアクセシビリティ書き換え
         function.isAccessible = true
 
-        val tempValueParameters = ArrayList<ValueParameterGenerator<*>>()
+        val tempRequiredParameters = ArrayList<ValueParameter<*>>()
         val tempChildGenerators = ArrayList<KFunctionAdaptorGenerator<*>>()
 
         parameters.forEach { param ->
@@ -63,21 +66,25 @@ class KFunctionAdaptorGenerator<T> internal constructor(
                             KFunctionAdaptorGenerator(tempConstructor, converter, tempInstance, param.index)
                         )
                     }
-                    ?: tempValueParameters.add(
-                        ValueParameterGenerator(param, parameterNameConverter.convert(name), requiredClazz)
+                    ?: tempRequiredParameters.add(
+                        ValueParameter(param, parameterNameConverter.convert(name), requiredClazz)
                     )
             }
         }
 
-        valueParameterGenerators = tempValueParameters
         childGenerators = tempChildGenerators
+        myParameters = tempRequiredParameters
+        // パラメータは親子全てを合わせて公開する
+        requiredParameters = childGenerators.fold(tempRequiredParameters as List<ValueParameter<*>>) { acc, child ->
+            child.requiredParameters + acc
+        }
     }
 
     fun generateAdaptor(): KFunctionAdaptor<T> {
         return KFunctionAdaptor(
             function,
             index,
-            valueParameterGenerators,
+            requiredParameters,
             bucketGenerator.generate(),
             childGenerators.map { it.generateAdaptor() }
         )
