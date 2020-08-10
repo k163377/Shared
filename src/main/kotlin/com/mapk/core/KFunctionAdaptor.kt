@@ -7,7 +7,7 @@ import kotlin.reflect.KFunction
 class KFunctionAdaptor<T> internal constructor(
     private val function: KFunction<T>,
     private val index: Int?,
-    valueParameters: List<ValueParameterGenerator>,
+    valueParameters: List<ValueParameterGenerator<*>>,
     private val bucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
 ) {
