@@ -26,6 +26,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         null
     )
 
+    @Suppress("MemberVisibilityCanBePrivate")
     val requiredParameters: List<ValueParameter<*>>
     private val myParameters: List<ValueParameter<*>>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
