@@ -20,7 +20,9 @@ class KFunctionAdaptor<T> internal constructor(
             it.name!! to AdaptorEntry(it, bucket)
         }
 
-        requiredParameterMap = thisMap + children.map { it.requiredParameterMap }.reduce { acc, cur -> acc + cur }
+        requiredParameterMap = children
+            .map { it.requiredParameterMap }
+            .fold(thisMap) { acc, cur -> acc + cur }
     }
 
     val isFullInitialized: Boolean get() = bucket.isFullInitialized
