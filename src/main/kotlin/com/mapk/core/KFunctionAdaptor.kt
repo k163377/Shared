@@ -11,14 +11,11 @@ class KFunctionAdaptor<T> internal constructor(
     private val bucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
 ) {
-    // TODO: ユーザーの生成処理はforEachで回すことになりそうなので、公開するものは多分Listの方がよい
-    val requiredParameterMap: Map<String, ValueParameter<*>>
+    val requiredParameters: List<ValueParameter<*>> = valueParameters.map { it.generate(bucket) }
+    private val requiredParameterMap: Map<String, ValueParameter<*>>
 
     init {
-        val thisMap = valueParameters.associate {
-            val valueParameter = it.generate(bucket)
-            valueParameter.name to valueParameter
-        }
+        val thisMap = requiredParameters.associateBy { it.name }
 
         requiredParameterMap = children
             .map { it.requiredParameterMap }
