@@ -5,24 +5,18 @@ import kotlin.reflect.KParameter
 internal class ArgumentBucket(
     private val keyList: List<KParameter>,
     internal val valueArray: Array<Any?>,
-    private val initializationStatuses: Array<Boolean>,
-    private var count: Int
+    val initializationStatuses: Array<Boolean>,
+    val initialCount: Int
 ) : Map<KParameter, Any?> {
     class Entry internal constructor(
         override val key: KParameter,
         override var value: Any?
     ) : Map.Entry<KParameter, Any?>
 
-    val isFullInitialized: Boolean
-        get() = count == keyList.size
-
-    // Note: ここでifするのって妥当？n重チェックになってしまう気がするのでチェック場所を考える
-    fun putIfAbsent(index: Int, value: Any?) {
-        if (!initializationStatuses[index]) {
-            valueArray[index] = value
-            initializationStatuses[index] = true
-            count++
-        }
+    // put状況の管理はAdaptorの方で行うため、ここではforcePutのみ提供
+    fun forcePut(index: Int, value: Any?) {
+        valueArray[index] = value
+        initializationStatuses[index] = true
     }
 
     override val entries: Set<Map.Entry<KParameter, Any?>>
@@ -34,12 +28,12 @@ internal class ArgumentBucket(
     override val keys: Set<KParameter>
         get() = keyList.filterIndexed { index, _ -> initializationStatuses[index] }.toSet()
     override val size: Int
-        get() = count
+        get() = initializationStatuses.count { it }
     override val values: Collection<Any?>
         get() = values.filterIndexed { index, _ -> initializationStatuses[index] }
 
     override fun containsKey(key: KParameter): Boolean = initializationStatuses[key.index]
     override fun containsValue(value: Any?): Boolean = valueArray.any { it == value }
     override fun get(key: KParameter): Any? = valueArray[key.index]
-    override fun isEmpty(): Boolean = count == 0
+    override fun isEmpty(): Boolean = size != 0
 }
