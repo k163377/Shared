@@ -62,7 +62,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
                             parameterNameConverter.toSimple()
                         }
 
-                        val (tempInstance, tempConstructor) = param.getKClass().getKConstructor()
+                        val (tempInstance, tempConstructor) = requiredClazz.getKConstructor()
                         tempChildGenerators.add(
                             KFunctionAdaptorGenerator(tempConstructor, converter, tempInstance, param.index)
                         )
