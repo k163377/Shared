@@ -14,11 +14,12 @@ class KFunctionAdaptor<T> internal constructor(
     private val requiredParameterMap: Map<String, Pair<ValueParameter<*>, ArgumentBucket>>
 
     init {
-        val thisMap = myParameters.associate { it.name to (it to myBucket) }
+        val thisMap = HashMap<String, Pair<ValueParameter<*>, ArgumentBucket>>()
+        myParameters.forEach { thisMap[it.name] = it to myBucket }
 
         requiredParameterMap = children
             .map { it.requiredParameterMap }
-            .fold(thisMap) { acc, cur -> acc + cur }
+            .fold(thisMap) { acc, cur -> acc.apply { putAll(cur) } }
     }
 
     val isFullInitialized: Boolean get() = myBucket.valueArray.size == count && children.all { it.isFullInitialized }

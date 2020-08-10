@@ -76,8 +76,10 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         childGenerators = tempChildGenerators
         myParameters = tempRequiredParameters
         // パラメータは親子全てを合わせて公開する
-        requiredParameters = childGenerators.fold(tempRequiredParameters as List<ValueParameter<*>>) { acc, child ->
-            child.requiredParameters + acc
+        requiredParameters = childGenerators.fold(ArrayList(tempRequiredParameters)) { acc, child ->
+            acc.apply {
+                addAll(child.requiredParameters)
+            }
         }
     }
 
