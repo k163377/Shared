@@ -57,6 +57,6 @@ class KFunctionAdaptor<T> internal constructor(
         return if (isFullInitialized)
             function.call(*myBucket.valueArray)
         else
-            function.call(myBucket)
+            function.callBy(myBucket)
     }
 }
