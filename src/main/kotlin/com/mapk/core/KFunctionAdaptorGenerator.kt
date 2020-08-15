@@ -31,6 +31,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
     private val myParameters: List<ValueParameter<*>>
     private val childGenerators: List<KFunctionAdaptorGenerator<*>>
     private val bucketGenerator: BucketGenerator
+    private val initialCount: Int
 
     init {
         val parameters = function.parameters
@@ -38,7 +39,10 @@ class KFunctionAdaptorGenerator<T> internal constructor(
         if (parameters.isEmpty() || (instance != null && parameters.size == 1))
             throw IllegalArgumentException("This function is not require arguments.")
 
-        bucketGenerator = BucketGenerator(parameters, instance)
+        BucketGenerator.of(parameters, instance).apply {
+            bucketGenerator = first
+            initialCount = second
+        }
 
         // この関数には確実にアクセスするためアクセシビリティ書き換え
         function.isAccessible = true
