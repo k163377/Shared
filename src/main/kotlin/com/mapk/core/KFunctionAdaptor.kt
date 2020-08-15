@@ -11,11 +11,11 @@ class KFunctionAdaptor<T> internal constructor(
     private val children: List<KFunctionAdaptor<*>>
 ) {
     private var count = myBucket.initialCount
-    private val requiredParameterMap: Map<String, Pair<ValueParameter<*>, ArgumentBucket>>
+    private val requiredParameterMap: Map<String, Pair<Int, ArgumentBucket>>
 
     init {
-        val thisMap = HashMap<String, Pair<ValueParameter<*>, ArgumentBucket>>()
-        myParameters.forEach { thisMap[it.name] = it to myBucket }
+        val thisMap = HashMap<String, Pair<Int, ArgumentBucket>>()
+        myParameters.forEach { thisMap[it.name] = it.index to myBucket }
 
         requiredParameterMap = children
             .map { it.requiredParameterMap }
@@ -26,25 +26,25 @@ class KFunctionAdaptor<T> internal constructor(
 
     fun putIfAbsent(key: String, value: Any?) {
         requiredParameterMap.getValue(key).let { (param, bucket) ->
-            if (!bucket.initializationStatuses[param.index]) {
-                bucket.forcePut(param.index, value)
+            if (!bucket.initializationStatuses[param]) {
+                bucket.forcePut(param, value)
                 count++
             }
         }
     }
 
     fun putIfAbsent(key: String, consumer: () -> Any?) {
-        requiredParameterMap.getValue(key).let { (param, bucket) ->
-            if (!bucket.initializationStatuses[param.index]) {
-                bucket.forcePut(param.index, consumer())
+        requiredParameterMap.getValue(key).let { (index, bucket) ->
+            if (!bucket.initializationStatuses[index]) {
+                bucket.forcePut(index, consumer())
                 count++
             }
         }
     }
 
     fun forcePut(key: String, value: Any?) {
-        requiredParameterMap.getValue(key).let { (param, bucket) ->
-            bucket.forcePut(param.index, value)
+        requiredParameterMap.getValue(key).let { (index, bucket) ->
+            bucket.forcePut(index, value)
             count++
         }
     }
