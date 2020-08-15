@@ -6,7 +6,7 @@ import kotlin.reflect.KFunction
 class KFunctionAdaptor<T> internal constructor(
     private val function: KFunction<T>,
     private val index: Int?, // Adaptor内で子関数として呼び出す際に利用するindex
-    private var count: Int,
+    private var count: Int, // バケツ内のカウント周りに合わせるため、外部から受け取る
     myParameters: List<ValueParameter<*>>,
     private val myBucket: ArgumentBucket,
     private val children: List<KFunctionAdaptor<*>>
