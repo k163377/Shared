@@ -5,8 +5,7 @@ import kotlin.reflect.KParameter
 internal class ArgumentBucket(
     private val keyList: List<KParameter>,
     internal val valueArray: Array<Any?>,
-    val initializationStatuses: Array<Boolean>,
-    val initialCount: Int
+    val initializationStatuses: Array<Boolean>
 ) : Map<KParameter, Any?> {
     class Entry internal constructor(
         override val key: KParameter,
