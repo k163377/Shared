@@ -22,13 +22,13 @@ class KFunctionAdaptor<T> internal constructor(
             .fold(thisMap) { acc, cur -> acc.apply { putAll(cur) } }
     }
 
-    val isFullInitialized: Boolean get() = myBucket.valueArray.size == count && children.all { it.isFullInitialized }
+    val isFullInitialized: Boolean get() = count == 0 && children.all { it.isFullInitialized }
 
     fun putIfAbsent(key: String, value: Any?) {
         requiredParameterMap.getValue(key).let { (param, bucket) ->
             if (!bucket.initializationStatuses[param]) {
                 bucket.forcePut(param, value)
-                count++
+                count--
             }
         }
     }
@@ -37,7 +37,7 @@ class KFunctionAdaptor<T> internal constructor(
         requiredParameterMap.getValue(key).let { (index, bucket) ->
             if (!bucket.initializationStatuses[index]) {
                 bucket.forcePut(index, consumer())
-                count++
+                count--
             }
         }
     }
@@ -45,7 +45,7 @@ class KFunctionAdaptor<T> internal constructor(
     fun forcePut(key: String, value: Any?) {
         requiredParameterMap.getValue(key).let { (index, bucket) ->
             bucket.forcePut(index, value)
-            count++
+            count--
         }
     }
 
