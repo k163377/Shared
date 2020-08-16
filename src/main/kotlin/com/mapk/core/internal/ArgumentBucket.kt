@@ -37,6 +37,6 @@ internal class ArgumentBucket(
     override fun isEmpty(): Boolean = size != 0
 
     // 初期化されているインデックスの内容だけ取り出す共通関数
-    private fun<T> Collection<T>.filterIsInitialized() =
+    private fun <T> Collection<T>.filterIsInitialized() =
         filterIndexed { index, _ -> initializationStatuses[index] }
 }
