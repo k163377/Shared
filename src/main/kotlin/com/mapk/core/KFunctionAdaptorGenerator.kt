@@ -41,7 +41,7 @@ class KFunctionAdaptorGenerator<T> internal constructor(
 
         BucketGenerator.of(parameters, instance).apply {
             bucketGenerator = first
-            initialCount = second
+            initialCount = parameters.size - second // カウントダウン式
         }
 
         // この関数には確実にアクセスするためアクセシビリティ書き換え
